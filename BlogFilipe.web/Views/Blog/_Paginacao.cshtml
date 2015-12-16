@@ -1,0 +1,17 @@
+﻿@model BlogFilipe.web.Models.Blog.ListarPostsViewModel
+@if (Model.TotalPaginas > 1)
+{
+    var proximaPagina = Model.PaginaAtual + 1;
+    var paginaAnterior = Model.PaginaAtual - 1;
+
+    <div class="pagination">
+        @if (Model.PaginaAtual > 1)
+        {
+            @Html.ActionLink("Página anterior", "Index", "Blog", new { pagina = paginaAnterior, tag = Model.Tag, pesquisa = Model.Pesquisa }, new { rel = "prev" })
+        }
+        @if (Model.PaginaAtual < Model.TotalPaginas)
+        {
+            @Html.ActionLink("Próxima página", "Index", "Blog", new { pagina = proximaPagina, tag = Model.Tag, pesquisa = Model.Pesquisa }, new { rel = "next" })
+        }
+    </div>
+}

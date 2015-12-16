@@ -1,0 +1,17 @@
+﻿@model BlogFilipe.web.Models.Usuario.ListarUsuarioViewModel
+@{
+    ViewBag.Title = "Usuários";
+}
+@section Scripts
+{
+    <script src="@Url.Content("~/Scripts/Views/Usuario/Index.js")"></script>
+}
+
+<h1>Usuários</h1>
+
+@foreach (var item in Model.Usuarios)
+{
+    <h2>@Html.ActionLink(item.Nome, "EditarUsuario", "Usuario", new { id = item.Id }, null)</h2>
+   
+    @Html.ActionLink("Excluir", "ExcluirUsuario", "Usuario", new { id = item.Id }, new { @class = "excluir-usuario" })
+}
