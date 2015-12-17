@@ -16,9 +16,10 @@ namespace BlogFilipe.web.Controllers
         public ActionResult Index(int? pagina, string tag, string pesquisa)
         {
             var paginaCorreta = pagina.GetValueOrDefault(1);
+            var registrosPorPagina = 10;
+
             var conexao = new ConexaoBanco();
             var viewModel = new ListarPostsViewModel();
-            var registrosPorPagina = 10;
 
             List<Post> posts = (from p in conexao.Posts
                                 where p.Visivel == true
@@ -47,7 +48,17 @@ namespace BlogFilipe.web.Controllers
 
             viewModel.Posts = (from p in posts
                                orderby p.DataPublicacao descending
-                               select p ).Skip(qtdRegistrosPular).Take(registrosPorPagina).ToList();
+                               select new DetalhesPostViewModel
+                               {
+                                   DataPublicacao = p.DataPublicacao,
+                                   Autor = p.Autor,
+                                   Descricao = p.Descricao,
+                                   Id = p.Id,
+                                   Resumo = p.Resumo,
+                                   Titulo = p.Titulo,
+                                   Visivel = p.Visivel,
+                                   QtdeComentarios = p.Comentario.Count
+                               }).Skip(qtdRegistrosPular).Take(registrosPorPagina).ToList();
             viewModel.TotalPaginas = qtdePaginas;
             viewModel.PaginaAtual = paginaCorreta;
             viewModel.Tag = tag;
@@ -65,7 +76,7 @@ namespace BlogFilipe.web.Controllers
             return PartialView();
         }
 
-        public ActionResult Post(int id)
+        public ActionResult Post(int id, int? pagina)
         {
             var viewModel = new DetalhesPostViewModel();
             var conexao = new ConexaoBanco();
@@ -76,18 +87,85 @@ namespace BlogFilipe.web.Controllers
             {
                 throw new Exception(string.Format("Erro"));
             }
-            else
+
+            preencherViewModel(viewModel, post, pagina);
+
+            return View(viewModel);
+        }
+
+        private static void preencherViewModel(DetalhesPostViewModel viewModel, Post post, int? pagina)
+        {
+            viewModel.Id = post.Id;
+            viewModel.Autor = post.Autor;
+            viewModel.DataPublicacao = post.DataPublicacao;
+            viewModel.Descricao = post.Descricao;
+            viewModel.HoraPublicacao = post.DataPublicacao;
+            viewModel.Resumo = post.Resumo;
+            viewModel.Titulo = post.Titulo;
+            viewModel.QtdeComentarios = post.Comentario.Count;
+            viewModel.Tags = (from p in post.TagsPost
+                              select p.IdTag).ToList();
+
+            var paginaCorreta = pagina.GetValueOrDefault(1);
+            var registrosPorPagina = 3;
+            var totalRegistros = post.Comentario.Count();
+            var indiceDaPagina = paginaCorreta - 1;
+            var qtdRegistrosPular = (indiceDaPagina * registrosPorPagina);
+            var qtdePaginas = (int)Math.Ceiling((decimal)totalRegistros / registrosPorPagina);
+
+            viewModel.Comentarios = (from p in post.Comentario
+                                     orderby p.DataHora
+                                     select p).Skip(qtdRegistrosPular).Take(registrosPorPagina).ToList();
+
+            viewModel.PaginaAtual = paginaCorreta;
+            viewModel.TotalPaginas = qtdePaginas;
+        }
+
+        [HttpPost]
+        public ActionResult Post(DetalhesPostViewModel viewModel)
+        {
+            var conexao = new ConexaoBanco();
+            var post = (from p in conexao.Posts
+                        where p.Id == viewModel.Id
+                        select p).FirstOrDefault();
+
+            if (ModelState.IsValid)
             {
-                viewModel.Id = post.Id;
-                viewModel.Autor = post.Autor;
-                viewModel.DataPublicacao = post.DataPublicacao;
-                viewModel.Descricao = post.Descricao;
-                viewModel.HoraPublicacao = post.DataPublicacao;
-                viewModel.Resumo = post.Resumo;
-                viewModel.Titulo = post.Titulo;
-                viewModel.Tags = (from p in post.TagsPost
-                                  select p.IdTag).ToList();
+                if (post == null)
+                {
+                    throw new Exception(string.Format("Post código {0} não encontrado.", viewModel.Id));
+                }
+
+                var comentario = new Comentario();
+
+                comentario.AdmPost = HttpContext.User.Identity.IsAuthenticated;
+                comentario.Descricao = viewModel.ComentarioDescricao;
+                comentario.Email = viewModel.ComentarioEmail;
+                comentario.IdPost = viewModel.Id;
+                comentario.Nome = viewModel.ComentarioNome;
+                comentario.PaginaWeb = viewModel.ComentarioPaginaWeb;
+                comentario.DataHora = DateTime.Now;
+
+                try
+                {
+                    conexao.Comentarios.Add(comentario);
+                    conexao.SaveChanges();
+                    return Redirect(Url.Action("Post", new
+                    {
+                        ano = post.DataPublicacao.Year,
+                        mes = post.DataPublicacao.Month,
+                        dia = post.DataPublicacao.Day,
+                        titulo = post.Titulo,
+                        id = post.Id
+                    }) + "#comentarios");
+                }
+                catch (Exception exp)
+                {
+                    ModelState.AddModelError("", exp.Message);
+                }
             }
+
+            preencherViewModel(viewModel, post, null);
 
             return View(viewModel);
         }

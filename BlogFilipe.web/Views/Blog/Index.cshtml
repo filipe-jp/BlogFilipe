@@ -18,11 +18,14 @@
         @foreach (var item in Model.Posts)
         {
             <h2>
-                @Html.ActionLink(item.Titulo, "Post", "Blog", new { id = item.Id,
-                                                                    ano = item.DataPublicacao.Year,
-                                                                    mes = item.DataPublicacao.Month,
-                                                                    dia = item.DataPublicacao.Day,
-                                                                    titulo = item.Titulo }, null)
+                @Html.ActionLink(item.Titulo, "Post", "Blog", new
+           {
+               id = item.Id,
+               ano = item.DataPublicacao.Year,
+               mes = item.DataPublicacao.Month,
+               dia = item.DataPublicacao.Day,
+               titulo = item.Titulo
+           }, null)
             </h2>
 
             <div class="div-imagem icone-calendario"></div>
@@ -32,7 +35,11 @@
             @item.Autor
 
             <div class="div-imagem icone-comentario"></div>
-            @Html.ActionLink("0", "EditarPost", "Administracao", new { id = item.Id }, null)
+            <a href="@Url.Action("Post", "Blog", new{ id = item.Id,
+                                                      ano = item.DataPublicacao.Year,
+                                                      mes = item.DataPublicacao.Month,
+                                                      dia = item.DataPublicacao.Day,
+                                                      titulo = item.Titulo })#comentarios">@item.QtdeComentarios</a>
 
             if (Request.IsAuthenticated)
             {
@@ -44,11 +51,14 @@
             }
 
             <div>@item.Resumo</div>
-            @Html.ActionLink("Continue lendo...", "Post", "Blog", new { id = item.Id,
-                                                                        ano = item.DataPublicacao.Year,
-                                                                        mes = item.DataPublicacao.Month,
-                                                                        dia = item.DataPublicacao.Day,
-                                                                        titulo = item.Titulo }, null)
+            @Html.ActionLink("Continue lendo...", "Post", "Blog", new
+       {
+           id = item.Id,
+           ano = item.DataPublicacao.Year,
+           mes = item.DataPublicacao.Month,
+           dia = item.DataPublicacao.Day,
+           titulo = item.Titulo
+       }, null)
         }
     </div>
 
