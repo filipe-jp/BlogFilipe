@@ -169,5 +169,10 @@ namespace BlogFilipe.web.Controllers
 
             return View(viewModel);
         }
+
+        public ActionResult _PaginacaoPost()
+        {
+            return PartialView();
+        }
     }
 }
